@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to a PR branch cancels the run that is still going. Runs on main
+# are never cancelled, so every commit on main gets a result.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+env:
+  # Matches .env.example; the Postgres service below listens on this port.
+  TEST_DATABASE_URL: postgres://knotwork:knotwork@localhost:5443/knotwork_test
+
+jobs:
+  quality:
+    name: Format, lint, typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6 # version comes from "packageManager"
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm build
+
+      - name: Generated API files are up to date
+        run: |
+          pnpm api:sync
+          git diff --exit-code -- apps/api/openapi.json apps/web/src/api/schema.gen.ts \
+            || (echo "::error::API spec or client is stale. Run 'pnpm api:sync' and commit the result." && exit 1)
+
+  test:
+    name: Unit and integration tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: knotwork
+          POSTGRES_PASSWORD: knotwork
+          POSTGRES_DB: knotwork_test
+        ports: ['5443:5432']
+        options: >-
+          --health-cmd "pg_isready -U knotwork -d knotwork_test"
+          --health-interval 2s --health-timeout 3s --health-retries 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm test
+      - run: pnpm test:int
