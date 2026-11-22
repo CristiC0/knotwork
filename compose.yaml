@@ -1,0 +1,51 @@
+# Development services. The API and web app run natively (`pnpm dev`) for fast
+# hot reload; only infrastructure runs here.
+#
+#   pnpm db:up      start everything and wait until healthy
+#   pnpm db:down    stop (data is kept in the db-data volume)
+#   pnpm db:reset   stop and DELETE all dev data
+#
+# Values come from .env (see .env.example); the defaults below match it.
+
+name: knotwork
+
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-knotwork}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-knotwork}
+      POSTGRES_DB: ${POSTGRES_DB:-knotwork}
+    ports:
+      - '127.0.0.1:${DB_PORT:-5442}:5432'
+    volumes:
+      # Postgres 18+ images keep data in a versioned subfolder, so mount the parent.
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  # Throwaway database for integration tests. Lives in RAM (tmpfs) and
+  # skips durability for speed. Tests can wipe it freely; it never touches dev data.
+  db-test:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-knotwork}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-knotwork}
+      POSTGRES_DB: knotwork_test
+    command:
+      ['postgres', '-c', 'fsync=off', '-c', 'synchronous_commit=off', '-c', 'full_page_writes=off']
+    ports:
+      - '127.0.0.1:${TEST_DB_PORT:-5443}:5432'
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d knotwork_test']
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  db-data:
