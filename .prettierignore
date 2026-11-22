@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+**/dist/
+**/coverage/
+# Generated files (CI checks they are up to date instead)
+**/*.gen.ts
+apps/api/openapi.json

@@ -1,0 +1,15 @@
+packages:
+  - 'apps/*'
+
+# Refuse to install with a Node version outside package.json "engines".
+engineStrict: true
+
+# Dependency install scripts are blocked unless listed here (supply-chain safety).
+allowBuilds:
+  # Install-time telemetry pinger pulled in by swagger-ui; never needed.
+  '@scarf/scarf': false
+
+peerDependencyRules:
+  allowedVersions:
+    # Declares TS ^5 but only uses the stable printer API; verified working with TS 6.
+    'openapi-typescript>typescript': '6'

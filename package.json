@@ -1,0 +1,45 @@
+{
+  "name": "knotwork",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Community platform for sharing crochet creations and their patterns",
+  "license": "UNLICENSED",
+  "type": "module",
+  "packageManager": "pnpm@12.21.0",
+  "engines": {
+    "node": ">=26.0.0 <27"
+  },
+  "scripts": {
+    "prepare": "husky",
+    "dev": "pnpm --recursive --parallel dev",
+    "build": "pnpm --recursive build",
+    "typecheck": "pnpm --recursive typecheck",
+    "lint": "eslint --max-warnings=0 .",
+    "lint:fix": "eslint --fix .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "pnpm --recursive test",
+    "test:int": "pnpm --filter @knotwork/api test:int",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
+    "api:sync": "pnpm --filter @knotwork/api openapi:generate && pnpm --filter @knotwork/web api:generate",
+    "db:up": "docker compose up --detach --wait",
+    "db:down": "docker compose down",
+    "db:reset": "docker compose down --volumes && docker compose up --detach --wait",
+    "db:migrate": "pnpm --filter @knotwork/api migration:run"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.15.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.8",
+    "globals": "^17.14.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.1",
+    "prettier": "^3.10.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.73.0"
+  }
+}

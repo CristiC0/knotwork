@@ -1,0 +1,2 @@
+# Full typecheck before code leaves your machine (too slow for every commit).
+pnpm typecheck
