@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["ES2024"],
+    "types": ["node"],
+    // NestJS and TypeORM rely on legacy decorators + runtime type metadata
+    // for dependency injection, validation and entity mapping.
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "sourceMap": true,
+    "incremental": true,
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "noEmit": true
+  },
+  "include": ["src", "test", "vitest.config.ts"]
+}
